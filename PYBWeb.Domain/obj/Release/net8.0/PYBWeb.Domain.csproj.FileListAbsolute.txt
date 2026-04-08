@@ -1,0 +1,11 @@
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\bin\Release\net8.0\PYBWeb.Domain.deps.json
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\bin\Release\net8.0\PYBWeb.Domain.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\bin\Release\net8.0\PYBWeb.Domain.pdb
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\PYBWeb.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\PYBWeb.Domain.AssemblyInfoInputs.cache
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\PYBWeb.Domain.AssemblyInfo.cs
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\PYBWeb.Domain.csproj.CoreCompileInputs.cache
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\PYBWeb.Domain.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\refint\PYBWeb.Domain.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\PYBWeb.Domain.pdb
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Domain\obj\Release\net8.0\ref\PYBWeb.Domain.dll
