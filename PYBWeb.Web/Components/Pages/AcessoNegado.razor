@@ -1,0 +1,88 @@
+@page "/acesso-negado"
+@layout PYBWeb.Web.Components.Layout.EmptyLayout
+@rendermode InteractiveServer
+
+<div class="access-denied-container">
+    <div class="access-denied-card">
+        <div class="text-center mb-4">
+            <img src="/logo-banrisul.png" alt="Banrisul" class="logo-banrisul mb-4" />
+        </div>
+        
+        <div class="text-center">
+            <div class="icon-container mb-4">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            
+            <h1 class="display-5 mb-3">Acesso Negado</h1>
+            
+            <p class="lead mb-4">
+                Você não possui permissão para acessar esta aplicação.
+            </p>
+            
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                Para solicitar acesso, entre em contato com o setor <strong>UAC SAP</strong>.
+            </div>
+            
+            <div class="mt-4">
+                <p class="text-muted">
+                    <small>Se você acredita que isso é um erro, por favor contate o administrador do sistema.</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .access-denied-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0066cc 0%, #004999 100%);
+        padding: 20px;
+    }
+    
+    .access-denied-card {
+        background: white;
+        border-radius: 12px;
+        padding: 60px 40px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .logo-banrisul {
+        max-width: 200px;
+        height: auto;
+    }
+    
+    .icon-container {
+        color: #0066cc;
+        font-size: 80px;
+    }
+    
+    .access-denied-card h1 {
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .access-denied-card .lead {
+        color: #666;
+        font-size: 1.1rem;
+    }
+    
+    .access-denied-card .alert {
+        background-color: #e7f3ff;
+        border: 1px solid #0066cc;
+        color: #004999;
+    }
+    
+    .access-denied-card .alert strong {
+        color: #0066cc;
+    }
+</style>
+
+@code {
+    
+}

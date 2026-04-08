@@ -1,0 +1,210 @@
+@page "/usuarios"
+@using PYBWeb.Infrastructure.Services
+@using Microsoft.AspNetCore.Authorization
+@inject ColaboradorService ColaboradorService
+@using Microsoft.AspNetCore.Components.Forms
+@using PYBWeb.Domain.Interfaces
+@inject ILogService LogService
+@inject ICurrentUserService CurrentUserService
+@rendermode InteractiveServer
+
+@attribute [Authorize(Policy = "RequireAdmin")]
+
+<PageTitle>Usuários PYB</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 text-primary">
+                <i class="bi-people"></i> Usuários PYB
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-success" @onclick="NovoUsuario">
+                Novo Usuário
+            </button>
+        </div>
+    </div>
+ 
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="bi bi-list-ul"></i> Lista de Usuários</h5>
+                </div>
+                <div class="card-body">
+                    @if (usuarios == null)
+                    {
+                        <span>Carregando...</span>
+                    }
+                    else if (!usuarios.Any())
+                    {
+                        <div class="alert alert-info">Nenhum usuário cadastrado.</div>
+                    }
+                    else
+                    {
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Matrícula</th>
+                                    <th>Nome</th>
+                                    <th>Setor</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var u in usuarios)
+                                {
+                                    <tr>
+                                        <td>@u.Matricula</td>
+                                        <td>@u.Nome</td>
+                                        <td>@u.Setor</td>
+                                        <td>@u.Email</td>
+                                        <td>@u.Role</td>
+                                        <td>
+                                            <button class="btn btn-primary me-1" title="Editar" @onclick="@(() => EditarUsuario(u))">Editar</button>
+                                            <button class="btn btn-danger" title="Excluir" @onclick="@(() => RemoverUsuario(u.Matricula))">Excluir</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <span class="text-danger">*Painel que credencia usuários para usar o APP EFETIVAÇÕES!</span>
+                    }
+                    @if (editando)
+                    {
+                        <div class="card mt-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5>@(novoUsuario ? "Novo Usuário" : "Editar Usuário")</h5>
+                            </div>
+                            <div class="card-body">
+                                <EditForm Model="usuarioEditando" OnValidSubmit="SalvarUsuario">
+                                    <DataAnnotationsValidator />
+                                    <div class="mb-3">
+                                        <label>Matrícula</label>
+                                        <InputText class="form-control" @bind-Value="usuarioEditando.Matricula" disabled="@(usuarioEditando.Matricula != null && !novoUsuario)" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label>Nome</label>
+                                        <InputText class="form-control" @bind-Value="usuarioEditando.Nome" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label>Setor</label>
+                                        <InputText class="form-control" @bind-Value="usuarioEditando.Setor" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label>Email</label>
+                                        <InputText class="form-control" @bind-Value="usuarioEditando.Email" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label>Role</label>
+                                        <InputSelect class="form-control" @bind-Value="usuarioEditando.Role">
+                                            <option value="usuario">Usuário</option>
+                                            <option value="admin">Admin</option>
+                                        </InputSelect>
+                                    </div>
+                                    <button type="submit" class="btn btn-success me-2">Salvar</button>
+                                    <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                                    
+                                </EditForm>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // ✅ ADICIONAR VARIÁVEL PARA ARMAZENAR O USUÁRIO
+    private string usuarioAtual = string.Empty;
+
+    List<Colaborador>? usuarios;
+    Colaborador usuarioEditando = new();
+    bool editando = false;
+    bool novoUsuario = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ✅ CAPTURA O USUÁRIO
+        usuarioAtual = CurrentUserService.UserName;
+        
+        if (string.IsNullOrWhiteSpace(usuarioAtual))
+        {
+            Console.WriteLine("[USUARIOS] Usuário vazio, tentando novamente...");
+            await Task.Delay(100);
+            usuarioAtual = CurrentUserService.UserName;
+        }
+        
+        if (string.IsNullOrWhiteSpace(usuarioAtual))
+        {
+            Console.WriteLine("[USUARIOS] Usuário ainda vazio, usando 'SISTEMA'");
+            usuarioAtual = "SISTEMA";
+        }
+        
+        Console.WriteLine($"[USUARIOS] Usuário capturado: '{usuarioAtual}'");
+        
+        await CarregarUsuarios();
+    }
+
+    async Task CarregarUsuarios()
+    {
+        usuarios = await ColaboradorService.ObterTodosAsync();
+        StateHasChanged();
+    }
+
+    void NovoUsuario()
+    {
+        usuarioEditando = new Colaborador();
+        editando = true;
+        novoUsuario = true;
+    }
+
+    void EditarUsuario(Colaborador user)
+    {
+        usuarioEditando = new Colaborador
+        {
+            Matricula = user.Matricula,
+            Nome = user.Nome,
+            Setor = user.Setor,
+            Email = user.Email,
+            Role = user.Role
+        };
+        editando = true;
+        novoUsuario = false;
+    }
+
+async Task SalvarUsuario()
+{
+    if (string.IsNullOrWhiteSpace(usuarioEditando.Matricula)) return;
+
+    // ✅ PASSA O USUÁRIO ARMAZENADO
+    if (novoUsuario)
+        await ColaboradorService.AdicionarAsync(usuarioEditando, usuarioAtual);
+    else
+        await ColaboradorService.AtualizarAsync(usuarioEditando, usuarioAtual);
+
+    editando = false;
+    usuarioEditando = new Colaborador();
+    await CarregarUsuarios();
+}
+
+async Task RemoverUsuario(string matricula)
+{
+    var c = usuarios?.Find(x => x.Matricula == matricula);
+    
+    // ✅ PASSA O USUÁRIO ARMAZENADO
+    await ColaboradorService.ExcluirAsync(matricula, usuarioAtual);
+
+    await CarregarUsuarios();
+}
+
+    void Cancelar()
+    {
+        editando = false;
+        usuarioEditando = new Colaborador();
+    }
+}

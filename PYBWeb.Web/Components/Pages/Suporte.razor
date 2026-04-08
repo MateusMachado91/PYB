@@ -1,0 +1,366 @@
+@page "/suporte"
+@using PYBWeb.Infrastructure.Services
+@using PYBWeb.Domain.Entities
+@inject SuporteService SuporteService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<PageTitle>Equipe de Suporte PYB</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 text-primary">
+                <i class="bi bi-people-fill"></i> Equipe de Suporte PYB
+            </h1>
+            <p class="text-muted">Entre em contato com nossa equipe de suporte</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-success" @onclick="NovoMembro">
+                <i class="bi bi-person-plus"></i> Adicionar Membro
+            </button>
+        </div>
+    </div>
+
+    @if (carregando)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando... </span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- COORDENADOR -->
+        <div class="mb-4">
+            <h5 class="text-primary">
+                <i class="bi bi-person-badge"></i> Coordenador
+            </h5>
+            @if (coordenador != null)
+            {
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <strong>@coordenador.Nome</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <i class="bi bi-envelope"></i>
+                                <a href="mailto:@coordenador.Email">@coordenador.Email</a>
+                            </div>
+                            <div class="col-md-2">
+                                <i class="bi bi-telephone"></i>
+                                Ramal: <strong>@coordenador.Ramal</strong>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="@(() => EditarMembro(coordenador))">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="@(() => RemoverMembro(coordenador. Id))">
+                                    <i class="bi bi-trash"></i> Remover
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Nenhum coordenador definido
+                </div>
+            }
+        </div>
+
+        <!-- EQUIPE CICS -->
+        <div class="mb-4">
+            <h5 class="text-primary">
+                <i class="bi bi-people"></i> Equipe CICS
+            </h5>
+            @if (equipeCics != null && equipeCics.Any())
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 150px;">Nome</th>
+                                    <th style="width: 200px;">Email</th>
+                                    <th style="width: 90px;">Ramal</th>
+                                    <th style="width: 150px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var membro in equipeCics)
+                                {
+                                    <tr>
+                                        <td><strong>@membro.Nome</strong></td>
+                                        <td><a href="mailto:@membro. Email">@membro.Email</a></td>
+                                        <td>@membro.Ramal</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="@(() => EditarMembro(membro))">
+                                                <i class="bi bi-pencil">Editar</i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="@(() => RemoverMembro(membro.Id))">
+                                                <i class="bi bi-trash">Remover</i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum membro na equipe CICS
+                </div>
+            }
+        </div>
+
+        <!-- DESENVOLVIMENTO -->
+        <div class="mb-4">
+            <h5 class="text-success">
+                <i class="bi bi-code-slash"></i> Desenvolvimento
+            </h5>
+            @if (desenvolvimento != null && desenvolvimento.Any())
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 150px;">Nome</th>
+                                    <th style="width: 200px;">Email</th>
+                                    <th style="width: 90px;">Ramal</th>
+                                    <th style="width: 150px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var membro in desenvolvimento)
+                                {
+                                    <tr>
+                                        <td><strong>@membro.Nome</strong></td>
+                                        <td><a href="mailto:@membro.Email">@membro.Email</a></td>
+                                        <td>@membro.Ramal</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-success me-1" @onclick="@(() => EditarMembro(membro))">
+                                                <i class="bi bi-pencil">Editar</i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="@(() => RemoverMembro(membro.Id))">
+                                                <i class="bi bi-trash">Remover</i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum membro em desenvolvimento
+                </div>
+            }
+        </div>
+    }
+
+    <!-- MODAL DE EDIÇÃO -->
+    @if (editando)
+    {
+        <div class="modal-overlay" @onclick="Cancelar"></div>
+        <div class="modal-dialog-custom">
+            <div class="card border-primary shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-@(novoMembro ?  "person-plus" : "pencil")"></i>
+                        @(novoMembro ? "Novo Membro" : "Editar Membro")
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" @bind="membroEditando.Nome" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Categoria *</label>
+                            <select class="form-select" @bind="membroEditando. Categoria" required>
+                                <option value="">Selecione... </option>
+                                <option value="Coordenador">Coordenador</option>
+                                <option value="Equipe CICS">Equipe CICS</option>
+                                <option value="Desenvolvimento">Desenvolvimento</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" @bind="membroEditando. Email" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ramal *</label>
+                            <input type="text" class="form-control" @bind="membroEditando. Ramal" required />
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-success me-2" @onclick="SalvarMembro">
+                            <i class="bi bi-check-circle"></i> Salvar
+                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (! string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong class="me-auto">Erro</strong>
+                <button type="button" class="btn-close btn-close-white" @onclick="@(() => mensagemErro = "")"></button>
+            </div>
+            <div class="toast-body">
+                @mensagemErro
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height:  100%;
+        background:  rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+    }
+
+    .modal-dialog-custom {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1050;
+        width: 90%;
+        max-width: 600px;
+    }
+</style>
+
+@code {
+    MembroSuporte?  coordenador;
+    List<MembroSuporte> equipeCics = new();
+    List<MembroSuporte> desenvolvimento = new();
+
+    MembroSuporte membroEditando = new();
+    bool carregando = true;
+    bool editando = false;
+    bool novoMembro = false;
+    string mensagemErro = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    async Task CarregarDados()
+    {
+        carregando = true;
+        try
+        {
+            coordenador = await SuporteService.ObterCoordenadorAsync();
+            equipeCics = await SuporteService. ObterPorCategoriaAsync("Equipe CICS");
+            desenvolvimento = await SuporteService.ObterPorCategoriaAsync("Desenvolvimento");
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao carregar dados:  {ex.Message}";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    void NovoMembro()
+    {
+        membroEditando = new MembroSuporte();
+        editando = true;
+        novoMembro = true;
+    }
+
+    void EditarMembro(MembroSuporte membro)
+    {
+        membroEditando = new MembroSuporte
+        {
+            Id = membro. Id,
+            Nome = membro.Nome,
+            Email = membro.Email,
+            Ramal = membro.Ramal,
+            Categoria = membro.Categoria
+        };
+        editando = true;
+        novoMembro = false;
+    }
+
+    async Task SalvarMembro()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(membroEditando. Nome) ||
+                string.IsNullOrWhiteSpace(membroEditando.Email) ||
+                string. IsNullOrWhiteSpace(membroEditando.Ramal) ||
+                string.IsNullOrWhiteSpace(membroEditando.Categoria))
+            {
+                mensagemErro = "Preencha todos os campos obrigatórios";
+                return;
+            }
+
+            if (novoMembro)
+                await SuporteService.AdicionarAsync(membroEditando);
+            else
+                await SuporteService.AtualizarAsync(membroEditando);
+
+            editando = false;
+            membroEditando = new MembroSuporte();
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro:  {ex.Message}";
+        }
+    }
+
+    async Task RemoverMembro(int id)
+    {
+        try
+        {
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Deseja realmente remover este membro?");
+            if (! confirmed) return;
+
+            await SuporteService.ExcluirAsync(id);
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao remover:  {ex.Message}";
+        }
+    }
+
+    void Cancelar()
+    {
+        editando = false;
+        membroEditando = new MembroSuporte();
+    }
+}

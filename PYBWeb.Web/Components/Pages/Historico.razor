@@ -1,0 +1,350 @@
+@page "/historico"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Mvc
+@using PYBWeb.Domain.Entities
+@using PYBWeb.Domain.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@inject ISolicitacoesCics2025Service SolicitacoesCics2025Service
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject UserService UserService
+
+@* ⚠️ DESABILITADO PARA TESTES - Descomentar em produção *@
+@attribute [Authorize(Policy = "RequireAdmin")]
+
+<PageTitle>Histórico - PYB CICS</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 text-primary">
+                <i class="bi bi-clock-history"></i> 
+                Histórico de Solicitações CICS
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="card-title text-primary mb-3">
+                <i class="bi bi-funnel"></i> Filtros
+            </h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Data Inicial</label>
+                    <input type="date" class="form-control" @bind="dataInicial" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data Final</label>
+                    <input type="date" class="form-control" @bind="dataFinal" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" @bind="statusFiltro">
+                        <option value="">Todos</option>
+                        <option value="Implementada">Implementada</option>
+                        <option value="Rejeitada">Rejeitada</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-primary me-2" @onclick="AplicarFiltros">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="LimparFiltros">
+                        <i class="bi bi-x-circle"></i> Limpar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    }
+    else 
+    {
+        @if (!solicitacoesHistorico.Any())
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhuma solicitação implementada ou rejeitada encontrada.
+            </div>
+        }
+        else
+        {
+            <!-- Tabela de Histórico -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Tipo de Solicitação</th>
+                            <th>Operação</th>
+                            <th>CSS</th>
+                            <th>Ambiente</th>
+                            <th>Solicitante</th>
+                            <th>Status</th>
+                            <th>Data Solicitação</th>
+                            <th>Data Finalização</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var solicitacao in solicitacoesHistorico)
+                        {
+                            <tr class="@GetRowClass(solicitacao)" style="cursor: pointer;" @onclick="() => SelecionarSolicitacao(solicitacao)">
+                                <td>
+                                    <span class="badge @GetBadgeClassTipoTabela(solicitacao.TipoTabela)">
+                                        @solicitacao.TipoTabela @solicitacao.Type
+                                    </span>
+                                </td>
+                                <td><strong>@solicitacao.Operacao</strong></td>
+                                <td>
+                                    <span class="badge bg-secondary">@solicitacao.Css</span>
+                                </td>
+                                <td>
+                                        <strong>@solicitacao.Appli</strong>
+                                </td>
+                                <td><strong>@solicitacao.Usuario</strong></td>
+                                <td>
+                                    <span class="badge @GetBadgeClassStatus(solicitacao.Status)">
+                                        @solicitacao.Status
+                                    </span>
+                                </td>
+                                <td>@solicitacao.DataSolicitacao.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(solicitacao.DataEfetivacao?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            </tr>
+                            
+                            <!-- Linha de detalhes expandidos -->
+                            @if (solicitacaoSelecionada?.Id == solicitacao.Id)
+                            {
+                                <tr class="table-secondary">
+                                    <td colspan="12">
+                                        <div class="card border-0">
+                                            <div class="card-body">
+                                                <h6 class="text-primary mb-3">
+                                                    <i class="bi bi-info-circle"></i>  Detalhes da Operação feita pela <strong>UAC SAP</strong>
+                                                </h6>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-2">
+                                                        <p><strong>Nº Solicitação:</strong> @solicitacao.NumeroSolicitacao</p>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        @if (!string.IsNullOrEmpty(solicitacao.ResponsavelEfetivacao))
+                                                        {
+                                                            <p><strong>Responsável pela Finalização:</strong> @solicitacao.ResponsavelEfetivacao?.Replace("CORP\\", "")</p>
+                                                        }
+                                                    </div>
+                                                    <div class="col-md-7">       
+                                                        @if (!string.IsNullOrEmpty(solicitacao.ObservacoesAdmin))
+                                                        {
+                                                            <p><strong>Observações:</strong></p>
+                                                            <div class="alert alert-danger text-break wrap-pre" style="max-height:150px; overflow:auto;">
+                                                                @solicitacao.ObservacoesAdmin
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Botão Carregar Mais -->
+            @if (TemMaisParaCarregar)
+            {
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary" @onclick="CarregarMais">
+                        <i class="bi bi-arrow-down-circle"></i> Exibir Mais
+                    </button>
+                    <p class="text-muted mt-2">
+                        Exibindo @solicitacoesHistorico.Count de @todasSolicitacoesHistorico.Count solicitações
+                    </p>
+                </div>
+            }
+            else if (todasSolicitacoesHistorico.Any())
+            {
+                <div class="text-center mt-3">
+                    <p class="text-muted">
+                        Exibindo todas as @todasSolicitacoesHistorico.Count solicitações
+                    </p>
+                </div>
+            }
+        }
+    }
+</div>
+
+@code {
+
+    
+    private bool isLoading = true;
+    private List<SolicitacaoCics2025> todasSolicitacoesHistorico = new();
+    private List<SolicitacaoCics2025> solicitacoesHistorico = new();
+    private SolicitacaoCics2025? solicitacaoSelecionada = null;
+    private int quantidadeExibida = 10;
+    private const int quantidadePorPagina = 10;
+    
+    // Filtros
+    private DateTime? dataInicial;
+    private DateTime? dataFinal;
+    private string statusFiltro = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarHistorico();
+    }
+
+    private async Task CarregarHistorico()
+    {
+        isLoading = true;
+        try
+        {
+            var todasSolicitacoes = await SolicitacoesCics2025Service.ObterTodasSolicitacoesAsync();
+            
+            // Filtrar apenas Implementadas e Rejeitadas
+            todasSolicitacoesHistorico = todasSolicitacoes
+                .Where(s => s.Status == "Implementada" || s.Status == "Rejeitada" || s.Status == "Cancelado")
+                .OrderByDescending(s => s.DataEfetivacao ?? s.DataSolicitacao)
+                .ToList();
+            
+            // Exibir apenas os primeiros 10
+            AtualizarListaExibida();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar histórico: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        quantidadeExibida = 10; // Resetar paginação
+        AtualizarListaExibida();
+    }
+
+    private void LimparFiltros()
+    {
+        dataInicial = null;
+        dataFinal = null;
+        statusFiltro = "";
+        quantidadeExibida = 10;
+        AtualizarListaExibida();
+    }
+
+    private void AtualizarListaExibida()
+    {
+        var solicitacoesFiltradas = todasSolicitacoesHistorico.AsEnumerable();
+
+        // Filtro por data inicial
+        if (dataInicial.HasValue)
+        {
+            solicitacoesFiltradas = solicitacoesFiltradas
+                .Where(s => (s.DataEfetivacao ?? s.DataSolicitacao).Date >= dataInicial.Value.Date);
+        }
+
+        // Filtro por data final
+        if (dataFinal.HasValue)
+        {
+            solicitacoesFiltradas = solicitacoesFiltradas
+                .Where(s => (s.DataEfetivacao ?? s.DataSolicitacao).Date <= dataFinal.Value.Date);
+        }
+
+        // Filtro por status
+        if (!string.IsNullOrEmpty(statusFiltro))
+        {
+            solicitacoesFiltradas = solicitacoesFiltradas
+                .Where(s => s.Status == statusFiltro);
+        }
+
+        solicitacoesHistorico = solicitacoesFiltradas
+            .Take(quantidadeExibida)
+            .ToList();
+    }
+
+    private void CarregarMais()
+    {
+        quantidadeExibida += quantidadePorPagina;
+        AtualizarListaExibida();
+        StateHasChanged();
+    }
+
+    private bool TemMaisParaCarregar
+    {
+        get
+        {
+            var solicitacoesFiltradas = todasSolicitacoesHistorico.AsEnumerable();
+
+            if (dataInicial.HasValue)
+                solicitacoesFiltradas = solicitacoesFiltradas.Where(s => (s.DataEfetivacao ?? s.DataSolicitacao).Date >= dataInicial.Value.Date);
+
+            if (dataFinal.HasValue)
+                solicitacoesFiltradas = solicitacoesFiltradas.Where(s => (s.DataEfetivacao ?? s.DataSolicitacao).Date <= dataFinal.Value.Date);
+
+            if (!string.IsNullOrEmpty(statusFiltro))
+                solicitacoesFiltradas = solicitacoesFiltradas.Where(s => s.Status == statusFiltro);
+
+            return solicitacoesFiltradas.Count() > quantidadeExibida;
+        }
+    }
+
+    private void SelecionarSolicitacao(SolicitacaoCics2025 solicitacao)
+    {
+        if (solicitacaoSelecionada?.Id == solicitacao.Id)
+        {
+            solicitacaoSelecionada = null; // Desmarcar
+        }
+        else
+        {
+            solicitacaoSelecionada = solicitacao;
+        }
+        StateHasChanged();
+    }
+
+    private string GetRowClass(SolicitacaoCics2025 solicitacao)
+    {
+        if (solicitacaoSelecionada?.Id == solicitacao.Id)
+            return "table-active";
+        
+        return "";
+    }
+
+    private string GetBadgeClassStatus(string? status)
+    {
+        return status switch
+        {
+            "Implementada" => "bg-success",
+            "Rejeitada" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetBadgeClassTipoTabela(string? tipoTabela)
+    {
+        return tipoTabela switch
+        {
+            "DCT" => "bg-primary",
+            "FCT" => "bg-info",
+            "PCT" => "bg-warning text-dark",
+            "PPT" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}

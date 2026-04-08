@@ -1,0 +1,684 @@
+@page "/"
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using PYBWeb.Domain.Entities
+@using PYBWeb.Domain.Interfaces
+@using PYBWeb.Web.Models
+@using PYBWeb.Infrastructure.Services
+@using System.Text
+@using Microsoft.AspNetCore.Authorization
+@using PYBWeb.Infrastructure.Mainframe
+@inject IAmbienteCicsService AmbienteCicsService
+@inject NavigationManager Navigation
+@inject ISolicitacoesCics2025Service SolicitacoesCics2025Service
+@inject ILogService LogService
+@inject IJSRuntime JSRuntime
+@inject IJclGeneratorService JclGenerator
+@inject ICurrentUserService CurrentUserService
+@rendermode InteractiveServer
+
+@attribute [Authorize(Policy = "RequireAdmin")]
+
+<PageTitle>Implementações - PYB CICS</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 text-primary">
+                <i class="bi bi-code-slash"></i> Implementações CICS
+            </h1>
+            @if (solicitacoesSelecionadas.Any())
+            {
+                <small class="text-muted">
+                    @solicitacoesSelecionadas.Count solicitação(ões) selecionada(s)
+                </small>
+            }
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-success btn-lg me-2" 
+                    @onclick="AbrirTelaImplementacao" 
+                    disabled="@(! PodVisualizarJcl)">
+                <i class="bi bi-code-slash"></i> Visualizar JCL (@solicitacoesSelecionadas.Count)
+            </button>
+            <button class="btn btn-danger btn-lg" 
+                    @onclick="AbrirModalRecusa" 
+                    disabled="@(!solicitacoesSelecionadas. Any())">
+                <i class="bi bi-x-circle"></i> Recusar
+            </button>
+        </div>
+    </div>
+
+    @if (! exibirTelaCobol)
+    {
+        @if (isLoading)
+        {
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            @if (! string.IsNullOrWhiteSpace(mensagemErroCompatibilidade))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Incompatibilidade detectada!</strong>
+                    <p class="mb-0 mt-2">@mensagemErroCompatibilidade</p>
+                    <button type="button" class="btn-close" @onclick="() => mensagemErroCompatibilidade = string.Empty"></button>
+                </div>
+            }
+
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-info-circle"></i> 
+                Clique nas linhas para selecionar uma ou mais solicitações pendentes para implementar.
+                <strong>Atenção:</strong> Solicitações devem ser da mesma <strong>Máquina</strong>. 
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th >Sel. </th>
+                                <th>Status</th>
+                                <th>Tipo</th>
+                                <th>Operação</th>
+                                <th>Solicitante</th>
+                                <th>Data</th>
+                                <th>Ambiente</th>
+                                <th>CSS</th>
+                                <th>Máquina</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var grupo in solicitacoesAgrupadas.OrderBy(g => g.Key))
+                            {
+                                @foreach (var solicitacao in grupo.Value)
+                                {
+                                    var ambiente = ambientes.FirstOrDefault(a => a.Nome == solicitacao.Appli);
+                                    var estaSelecionada = solicitacoesSelecionadas.Any(s => s.Id == solicitacao.Id);
+
+                                    <tr class="@(estaSelecionada ? "table-primary" : "")" 
+                                        style="cursor: pointer;"
+                                        @onclick="() => SelecionarSolicitacao(solicitacao)">
+                                        
+                                        @* ✅ ÍCONE em vez de checkbox *@
+                                        <td class="text-center">
+                                            @if (estaSelecionada)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-primary fs-5"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-circle text-muted"></i>
+                                            }
+                                        </td>
+                                        
+                                        <td>
+                                            @if (solicitacao.Status == "Pendente")
+                                            {
+                                                <span class="badge bg-warning">Pendente</span>
+                                            }
+                                            else if (solicitacao.Status == "Em Análise")
+                                            {
+                                                <span class="badge bg-info">Em Análise</span>
+                                            }
+                                        </td>
+                                        <td><span class="badge bg-secondary">@solicitacao.TipoTabela @solicitacao.Type</span></td>
+                                        <td>
+                                            <span class="badge @GetBadgeClassOperacao(solicitacao.Operacao ??  string.Empty)">
+                                                @solicitacao.Operacao
+                                            </span>    
+                                        </td>
+                                        <td>@solicitacao.Usuario</td>
+                                        <td>@solicitacao.DataSolicitacao.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                                @solicitacao.Appli
+                                        </td>
+                                        <td><span class="badge bg-info">@solicitacao.Css</span></td>
+                                        <td>
+                                            @if (ambiente != null)
+                                            {
+                                                <span class="badge bg-dark">@ambiente.Maquina @ambiente.Sufixo</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (!solicitacoesAgrupadas.Any())
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Nenhuma solicitação pendente encontrada.
+                </div>
+            }
+        }
+    }
+    else
+    {
+        <div class="card border-dark">
+            <div class="card-header bg-dark text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-terminal"></i>
+                        <strong>@solicitacoesSelecionadas.Count</strong> solicitação(ões) - 
+                        Ambiente: <strong>@ObterAmbienteDisplay()</strong>
+                    </h5>
+                    <button class="btn btn-sm btn-outline-light" @onclick="VoltarParaLista">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </button>
+                </div>
+            </div>
+
+            @* ⭐ ÁREA DE JUSTIFICATIVAS *@
+            @if (ExisteJustificativa())
+            {
+                <div class="alert alert-warning mb-0" style="border-radius: 0;">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Justificativas
+                    </h6>
+                    <hr/>
+                    @foreach (var sol in solicitacoesSelecionadas.Where(s => 
+                        ! string.IsNullOrWhiteSpace(s.JustificativaAutoAlt) || 
+                        !string.IsNullOrWhiteSpace(s.JustificativaBelow)))
+                    {
+                        <div class="mb-3">
+                            <strong>Solicitação @sol.NumeroSolicitacao:</strong>
+                            @if (!string.IsNullOrWhiteSpace(sol.JustificativaAutoAlt))
+                            {
+                                <p class="mb-1"><strong>Auto Alterável:</strong> @sol.JustificativaAutoAlt</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(sol.JustificativaBelow))
+                            {
+                                <p class="mb-0"><strong>Below:</strong> @sol.JustificativaBelow</p>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="card-body bg-black p-1">
+                @* Resumo das solicitações selecionadas *@
+                @if (solicitacoesSelecionadas.Count > 1)
+                {
+                    <div class="alert alert-info mb-2">
+                        <strong>Solicitações selecionadas (@solicitacoesSelecionadas.Count):</strong>
+                        <ul style="margin-bottom: 4px;">
+                            @foreach (var sol in solicitacoesSelecionadas)
+                            {
+                                <li>
+                                    <strong>@sol.TipoTabela</strong> - <strong>@sol.Operacao</strong>
+                                    @if (! string.IsNullOrEmpty(sol.NameArq)) { <span>— @sol.NameArq</span> }
+                                    @if (!string.IsNullOrEmpty(sol.NameTrans)) { <span>— @sol.NameTrans</span> }
+                                    @if (! string.IsNullOrEmpty(sol.NameSoft)) { <span>— @sol.NameSoft</span> }
+                                    (@sol.NumeroSolicitacao)
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                
+
+                <textarea @bind="jclGerado" 
+                          @bind:event="oninput"
+                          class="form-control border-0" 
+                          rows="30"
+                          style="background-color: #000000; 
+                                 color: #e6e333; 
+                                 font-family: 'Courier New', monospace; 
+                                 font-size: 16px; 
+                                 resize: vertical;
+                                 outline: none;
+                                 box-shadow: none;"
+                          placeholder="O JCL gerado aparecerá aqui e poderá ser editado... "></textarea>
+            </div>
+
+            <div class="card-footer bg-dark">
+                <div class="d-flex gap-2 justify-content-between align-items-center">
+                    <strong style="color: #ffffff;">
+                        @solicitacoesSelecionadas.Count solicitação(ões) selecionada(s)
+                    </strong>
+                    <div>
+                        <button class="btn btn-success" @onclick="SubmeterJCLAsync">
+                            <i class="bi bi-file-earmark-code"></i> Submeter JCL
+                        </button>
+                        <button class="btn btn-danger" @onclick="AbrirModalRecusa">
+                            <i class="bi bi-x-circle"></i> Recusar
+                        </button>
+                        <button class="btn btn-secondary" @onclick="VoltarParaLista">
+                            <i class="bi bi-x-circle"></i> Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* Modal de Recusa (mantém o mesmo) *@
+@if (exibirModalRecusa)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle"></i> Recusar Solicitação(ões)
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalRecusa"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>@solicitacoesSelecionadas.Count solicitação(ões) selecionada(s)</strong></p>
+                    <ul>
+                        @foreach (var sol in solicitacoesSelecionadas)
+                        {
+                            <li>@sol.NumeroSolicitacao - @sol.TipoTabela - @sol.Operacao</li>
+                        }
+                    </ul>
+                    <hr/>
+                    <div class="mb-3">
+                        <label for="motivoRecusa" class="form-label"><strong>Motivo da Recusa:</strong> <span class="text-danger">*</span></label>
+                        <textarea id="motivoRecusa" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  @bind="motivoRecusa"
+                                  placeholder="Descreva o motivo da recusa... "></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalRecusa">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarRecusaAsync" disabled="@string.IsNullOrWhiteSpace(motivoRecusa)">
+                        <i class="bi bi-check-circle"></i> Confirmar Recusa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // ⭐ MODO DEBUG
+    private readonly bool DEBUG_MODE = true;
+    private string usuarioAtual = string.Empty;
+
+    // ✅ Lista de selecionadas
+    private List<SolicitacaoCics2025> solicitacoesSelecionadas = new();
+    private string mensagemErroCompatibilidade = string.Empty;
+    private bool PodVisualizarJcl => solicitacoesSelecionadas != null && solicitacoesSelecionadas.Any();
+    
+    private IEnumerable<AmbienteCics> ambientes = new List<AmbienteCics>();
+    private bool isLoading = true;
+    private bool exibirTelaCobol = false;
+    private string jclGerado = "";
+    private List<SolicitacaoCics2025> solicitacoesAprovadas = new();
+    private Dictionary<string, List<SolicitacaoCics2025>> solicitacoesAgrupadas = new();
+    
+    // Modal de Recusa
+    private bool exibirModalRecusa = false;
+    private string motivoRecusa = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ✅ CAPTURA O USUÁRIO COM FALLBACK
+        usuarioAtual = CurrentUserService.UserName;
+        
+        // ✅ SE AINDA ESTIVER VAZIO, TENTA DE NOVO
+        if (string.IsNullOrWhiteSpace(usuarioAtual))
+        {
+            Console.WriteLine("[INIT] Usuário vazio, tentando novamente...");
+            await Task.Delay(100); // Pequeno delay
+            usuarioAtual = CurrentUserService.UserName;
+        }
+        
+        // ✅ SE AINDA ESTIVER VAZIO, USA UM PADRÃO
+        if (string.IsNullOrWhiteSpace(usuarioAtual))
+        {
+            Console.WriteLine("[INIT] Usuário ainda vazio, usando 'SISTEMA'");
+            usuarioAtual = "SISTEMA";
+        }
+        
+        Console.WriteLine($"[INIT] Usuário capturado: '{usuarioAtual}'");
+        
+        ambientes = await AmbienteCicsService.ObterAmbientesAtivosAsync();
+        await CarregarSolicitacoesPendentes();
+    }
+
+    private async Task CarregarSolicitacoesPendentes()
+    {
+        isLoading = true;
+        try
+        {
+            var pendentes = await SolicitacoesCics2025Service.ObterSolicitacoesPorStatusAsync("Pendente");
+            var emAnalise = await SolicitacoesCics2025Service.ObterSolicitacoesPorStatusAsync("Em Análise");
+
+            // ✅ Junta tudo e ordena por um critério estável (ex.: data desc + número)
+            var todas = pendentes
+                .Concat(emAnalise)
+                .OrderByDescending(s => s.DataSolicitacao)  // critério principal
+                .ThenBy(s => s.NumeroSolicitacao)           // critério de desempate
+                .ToList();
+
+            // ✅ Grupos já com a mesmíssima ordenação estável
+            solicitacoesAgrupadas = todas
+                .GroupBy(s => s.TipoTabela ?? "Outros")
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToList() // já está ordenado pela ordem aplicada acima
+                );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar solicitações: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    
+    // ✅ Validação de compatibilidade (apenas MÁQUINA)
+    private bool ValidarCompatibilidadeAmbiente(SolicitacaoCics2025 novaSolicitacao)
+    {
+        if (! solicitacoesSelecionadas. Any()) return true;
+
+        var ambienteReferencia = ambientes.FirstOrDefault(a => a.Id == solicitacoesSelecionadas. First().AmbienteId);
+        var ambienteNovo = ambientes.FirstOrDefault(a => a.Id == novaSolicitacao.AmbienteId);
+
+        if (ambienteReferencia == null || ambienteNovo == null)
+        {
+            mensagemErroCompatibilidade = "Ambiente não encontrado. ";
+            return false;
+        }
+
+        // Validação:  Apenas MÁQUINA deve ser igual
+        if (ambienteReferencia. Maquina != ambienteNovo.Maquina)
+        {
+            mensagemErroCompatibilidade = $"Incompatível!  Máquina selecionada: {ambienteReferencia.Maquina}. " +
+                                          $"Nova solicitação: {ambienteNovo.Maquina}.  " +
+                                          $"Todas as solicitações devem ser da mesma Máquina.";
+            return false;
+        }
+
+        mensagemErroCompatibilidade = string.Empty;
+        return true;
+    }
+
+    // ✅ Gerar JCL para múltiplas solicitações
+    private void AbrirTelaImplementacao()
+    {
+        if (! solicitacoesSelecionadas.Any()) return;
+
+        var ambiente = ambientes.FirstOrDefault(a => a.Id == solicitacoesSelecionadas.First().AmbienteId);
+        if (ambiente == null) return;
+
+        jclGerado = JclGenerator.GerarJclGrupo(solicitacoesSelecionadas, ambiente);
+
+        exibirTelaCobol = true;
+        StateHasChanged();
+    }
+
+    private void VoltarParaLista()
+    {
+        exibirTelaCobol = false;
+        jclGerado = "";
+        StateHasChanged();
+    }
+
+    private string ObterAmbienteDisplay()
+    {
+        if (! solicitacoesSelecionadas. Any()) return "";
+        
+        var ambiente = ambientes.FirstOrDefault(a => a.Id == solicitacoesSelecionadas.First().AmbienteId);
+        return ambiente != null ? $"{ambiente.IdChave} ({ambiente.Maquina}{ambiente.Sufixo})" : "N/A";
+    }
+
+    // ========== MODAL DE RECUSA ==========
+    private void AbrirModalRecusa()
+    {
+        if (!solicitacoesSelecionadas. Any()) return;
+        motivoRecusa = "";
+        exibirModalRecusa = true;
+        StateHasChanged();
+    }
+
+    private void FecharModalRecusa()
+    {
+        exibirModalRecusa = false;
+        motivoRecusa = "";
+        StateHasChanged();
+    }
+
+    
+    // ========== SUBMISSÃO DE JCL ==========
+    
+
+private async Task SubmeterJCLAsync()
+{
+    Console.WriteLine($"[SUBMETER] Usando usuário: '{usuarioAtual}'");
+
+    if (!solicitacoesSelecionadas.Any()) return;
+
+    var ambiente = ambientes.FirstOrDefault(a => a.Id == solicitacoesSelecionadas.First().AmbienteId);
+    if (ambiente == null) return;
+
+    string conteudoJcl = !string.IsNullOrWhiteSpace(jclGerado)
+        ? jclGerado
+        : JclGenerator.GerarJclGrupo(solicitacoesSelecionadas, ambiente);
+
+    var pastaBase = Path.Combine(AppContext.BaseDirectory, "..", "DATA_PYB");
+    var pastaJcl = Path.Combine(pastaBase, "JCL");
+    if (!Directory.Exists(pastaJcl))
+        Directory.CreateDirectory(pastaJcl);
+
+    var nomeArquivo = $"{ambiente.Maquina}{ambiente.Sufixo}{DateTime.Now:HHmmss}.jcl";
+    var caminhoCompleto = Path.Combine(pastaJcl, nomeArquivo);
+
+    File.WriteAllText(caminhoCompleto, conteudoJcl);
+
+    var caminhoRelativo = caminhoCompleto.Substring(pastaJcl.Length);
+    if (!caminhoRelativo.StartsWith("\\"))
+        caminhoRelativo = "\\" + caminhoRelativo;
+
+    bool sucesso;
+    string mensagemJes;
+    string codigoRetorno;
+    string numeroJob;
+
+    // 1) PRIMEIRO obtém o JOB
+    if (DEBUG_MODE)
+    {
+        sucesso = true;
+        mensagemJes = "🔧 [MODO DEBUG] JCL NÃO foi submetido ao mainframe";
+        codigoRetorno = "DEBUG-OK";
+        numeroJob = $"JOB{DateTime.Now:HHmmss}"; // sugiro manter padrão JOBxxxxxx
+
+        Console.WriteLine($"[DEBUG] JOB simulado: {numeroJob}");
+    }
+    else
+    {
+        (sucesso, mensagemJes, codigoRetorno, numeroJob) = JesSubmitter.SubmeterJCL(caminhoCompleto);
+    }
+
+    // 2) Se falhou, sai
+    if (!sucesso)
+    {
+        await JSRuntime.InvokeVoidAsync("alert", $"❌ FALHA EM SUBMETER\n\n{mensagemJes}");
+        return;
+    }
+
+
+    // 4) Atualiza status/log
+    foreach (var item in solicitacoesSelecionadas)
+    {
+        await AlterarStatusComLog(
+            item.Id,
+            "Implementada",
+            DEBUG_MODE
+                ? $"[DEBUG] JCL: {caminhoRelativo}\nJOB: {numeroJob}\nStatus: {codigoRetorno}"
+                : $"JCL: {caminhoRelativo}\nJOB: {numeroJob}\nStatus: {codigoRetorno}",
+            null,
+            usuarioAtual
+        );
+    }
+
+    var mensagemCompleta = DEBUG_MODE
+        ? $"🔧 MODO DEBUG\n\nArquivo: {nomeArquivo}\nJOB: {numeroJob}\nSolicitações: {solicitacoesSelecionadas.Count}\nUsuário: {usuarioAtual}"
+        : $"{mensagemJes}\n\nArquivo: {nomeArquivo}\nJOB: {numeroJob}\nSolicitações: {solicitacoesSelecionadas.Count}";
+
+    await JSRuntime.InvokeVoidAsync("alert", mensagemCompleta);
+
+    await CarregarSolicitacoesPendentes();
+    VoltarParaLista();
+    solicitacoesSelecionadas.Clear();
+    StateHasChanged();
+}
+
+        private async Task SelecionarSolicitacao(SolicitacaoCics2025 solicitacao)
+    {
+        var jaSelecionada = solicitacoesSelecionadas.Any(s => s.Id == solicitacao.Id);
+
+        if (jaSelecionada)
+        {
+            solicitacoesSelecionadas.RemoveAll(s => s.Id == solicitacao.Id);
+            StateHasChanged();
+            await CarregarSolicitacoesPendentes();
+            StateHasChanged();
+            return;
+        }
+
+        if (solicitacoesSelecionadas.Any())
+        {
+            if (!ValidarCompatibilidadeAmbiente(solicitacao))
+            {
+                StateHasChanged();
+                return;
+            }
+        }
+
+        solicitacoesSelecionadas.Add(solicitacao);
+        
+        if (solicitacao.Status == "Pendente")
+        {
+            // ✅ USA O USUÁRIO ARMAZENADO
+            await AlterarStatusComLog(
+                solicitacao.Id, 
+                "Em Análise", 
+                "Solicitação selecionada para análise",
+                null,
+                usuarioAtual // ✅ PASSA O USUÁRIO ARMAZENADO
+            );
+        }
+
+        StateHasChanged();
+        await CarregarSolicitacoesPendentes();
+        StateHasChanged();
+    }
+
+
+    private async Task ConfirmarRecusaAsync()
+    {
+        if (!solicitacoesSelecionadas.Any() || string.IsNullOrWhiteSpace(motivoRecusa)) return;
+
+        try
+        {
+            foreach (var sol in solicitacoesSelecionadas)
+            {
+                // ✅ USA O USUÁRIO ARMAZENADO
+                await AlterarStatusComLog(
+                    sol.Id, 
+                    "Rejeitada", 
+                    $"Solicitação rejeitada. Motivo: {motivoRecusa}",
+                    motivoRecusa,
+                    usuarioAtual // ✅ PASSA O USUÁRIO ARMAZENADO
+                );
+            }
+
+            await JSRuntime.InvokeVoidAsync("alert", 
+                $"{solicitacoesSelecionadas.Count} solicitação(ões) recusada(s) com sucesso.");
+            
+            FecharModalRecusa();
+            await CarregarSolicitacoesPendentes();
+            solicitacoesSelecionadas.Clear();
+            
+            if (exibirTelaCobol)
+            {
+                VoltarParaLista();
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao recusar solicitações: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", $"Erro ao recusar solicitações: {ex.Message}");
+        }
+    }
+    private bool ExisteJustificativa()
+    {
+        return solicitacoesSelecionadas.Any(s => 
+            !string.IsNullOrWhiteSpace(s. JustificativaAutoAlt) || 
+            !string. IsNullOrWhiteSpace(s.JustificativaBelow));
+    }
+
+private async Task AlterarStatusComLog(
+
+    
+
+    int solicitacaoId, 
+    string novoStatus, 
+    string detalhes, 
+    string? observacoes = null,
+    string? usuario = null) // ✅ ADICIONAR PARÂMETRO
+{
+    var solicitacao = await SolicitacoesCics2025Service.ObterSolicitacaoPorIdAsync(solicitacaoId);
+    if (solicitacao == null) return;
+
+    // ✅ USA O USUÁRIO PASSADO OU TENTA CAPTURAR
+    var usuarioFinal = usuario ?? CurrentUserService.UserName;
+
+    var statusAnterior = solicitacao.Status ?? "Pendente";
+    solicitacao.Status = novoStatus;
+    
+    if (!string.IsNullOrWhiteSpace(observacoes))
+        solicitacao.ObservacoesAdmin = observacoes;
+    
+    if (novoStatus == "Implementada" || novoStatus == "Rejeitada")
+    {
+        solicitacao.DataEfetivacao = DateTime.Now;
+        solicitacao.ResponsavelEfetivacao = usuarioFinal; // ✅ USA O USUÁRIO
+    }
+    
+    await SolicitacoesCics2025Service.AtualizarSolicitacaoAsync(solicitacao);
+    
+    // ✅ PASSA O USUÁRIO EXPLICITAMENTE
+    await LogService.RegistrarAsync(
+        acao: novoStatus,
+        tabela: "SolicitacaoCics2025",
+        registroId: solicitacaoId,
+        registroIdentificador: solicitacao.NumeroSolicitacao,
+        detalhes: detalhes,
+        statusAnterior: statusAnterior,
+        statusNovo: novoStatus,
+        usuario: usuarioFinal // ✅ PASSA O USUÁRIO
+    );
+}
+
+    private string GetBadgeClassOperacao(string operacao)
+    {
+        return operacao switch
+        {
+            "DELETE" => "bg-danger",
+            "ALTER" => "bg-secondary",
+            "DEFINE" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+}

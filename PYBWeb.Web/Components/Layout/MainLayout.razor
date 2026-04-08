@@ -1,0 +1,59 @@
+﻿@inherits LayoutComponentBase
+@inject UserService UserService
+@inject IHttpContextAccessor HttpContext
+@using Microsoft.AspNetCore.Authorization
+@inject ColaboradorService ColaboradorService
+
+<div class="page">
+
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+              
+        <div class="top-row align-items-center px-4">
+            <div class="col text-start">
+                <h4 class="text-primary mb-0">Logado como: @nomeUsuario</h4>
+                
+            </div>
+            <div class="col text-end">
+                <h4 class="mb-0 d-inline-flex align-items-center gap-2 fw-bolder text-gradient"><img src="/title.png" style="max-width: 60px;" alt="PYB CICS">  PYB - Sistema de Efetivações</h4>
+            </div>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+<div class="mt-5 text-center p-3 small" style="color: rgba(0,0,0,0.2);">
+    Desenvolvido por <strong>UAC SAP @DateTime.Now.Year</strong>
+
+    <div class="mt-2">
+        <a href="/suporte" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem;">
+            Entrar em contato com Suporte
+        </a>
+    </div>
+</div>
+
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+
+@code {
+    private string nomeUsuario = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        nomeUsuario = ColaboradorService.ObterNomePorMatricula(UserService.UserNameSemDominio);
+        
+    }
+    
+}
+
+

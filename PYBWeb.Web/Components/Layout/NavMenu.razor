@@ -1,0 +1,70 @@
+﻿@inject ISolicitacoesCics2025Service SolicitacoesCics2025Service
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="">
+            <img src="/logo-banrisul.png" alt="Banrisul" height="32" class="me-2" />
+        </a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                <span class="bi bi-code-slash-nav-menu" aria-hidden="true"></span>Implementação
+                @if (numeroPendentes > 0)
+        {
+            <span class="badge bg-warning ms-2">
+                @numeroImplementacoes
+            </span>
+        }
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="historico">
+                <span class="bi bi-clock-history-nav-menu" aria-hidden="true"></span> Histórico
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="ambientes">
+                <span class="bi bi-server-nav-menu" aria-hidden="true"></span> Ambientes CICS
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="usuarios">
+                <span class="bi bi-people-nav-menu" aria-hidden="true"></span> Usuários
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="logs">
+                <span class="bi bi-file-text-nav-menu" aria-hidden="true"></span> Logs
+            </NavLink>
+        </div>
+
+    </nav>
+
+    
+</div>
+
+
+@code{
+    private int numeroPendentes = 0;
+    private int numeroImplementacoes = 0;
+
+protected override async Task OnInitializedAsync()
+{
+    numeroPendentes = await SolicitacoesCics2025Service.ObterNumeroSolicitacoesPendentesAsync();
+    numeroImplementacoes = await SolicitacoesCics2025Service.ObterNumeroImplementacoesPendentesAsync();
+
+}
+
+}

@@ -1,0 +1,372 @@
+@page "/logs"
+@rendermode InteractiveServer
+@using PYBWeb.Domain.Entities
+@using PYBWeb.Domain.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@inject ILogService LogService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@* ⚠️ DESABILITADO PARA TESTES - Descomentar em produção *@
+@attribute [Authorize(Policy = "RequireAdmin")]
+
+<PageTitle>Logs do Sistema - PYB CICS</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 text-primary">
+                <i class="bi bi-file-text"></i> 
+                Logs de Modificações
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+
+            <!-- Botão de arquivar/limpar logs -->
+            <button class="btn btn-danger" @onclick="ConfirmArquivarLogs">
+                <i class="bi bi-archive"></i> Arquivar logs antigos
+            </button>
+        </div>
+    </div>
+
+        <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Logs Antigos</label>
+                    <select class="form-select" @bind="arquivoSelecionado">
+                        <option value="">-- Selecione um arquivo --</option>
+                        @foreach (var a in arquivosArquivados)
+                        {
+                            <option value="@a">@a</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary w-100" @onclick="CarregarArquivoSelecionado" disabled="@string.IsNullOrEmpty(arquivoSelecionado)">
+                        <i class="bi bi-folder2-open"></i> Carregar arquivo
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-secondary w-100" @onclick="RecarregarLogsAtuais">
+                        <i class="bi bi-arrow-clockwise"></i> Voltar aos logs atuais
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Data Início</label>
+                    <input type="date" class="form-control" @bind="filtroDataInicio" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data Fim</label>
+                    <input type="date" class="form-control" @bind="filtroDataFim" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ação</label>
+                    <select class="form-select" @bind="filtroAcao">
+                        <option value="">Todas</option>
+                        <option value="ALTERAR_STATUS">Alterar Status</option>
+                        <option value="GERAR_JCL">Gerar JCL</option>
+                        <option value="CRIAR">Criar</option>
+                        <option value="EDITAR">Editar</option>
+                        <option value="EXCLUIR">Excluir</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tabela</label>
+                    <select class="form-select" @bind="filtroTabela">
+                        <option value="">Todas</option>
+                        <option value="SolicitacaoCics2025">Solicitações</option>
+                        <option value="AmbienteCics">Ambientes CICS</option>
+                        <option value="AmbienteTodos">Ambientes TODOS</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" @onclick="CarregarLogs">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (!logs.Any())
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhum log encontrado com os filtros aplicados.
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul"></i> Registros de Modificações
+                        <span class="badge bg-secondary text-white ms-2">@logs.Count registro(s)</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th width="50">Data/Hora</th>
+                                    <th width="50">Usuário</th>
+                                    <th width="50">Ação</th>
+                                    <th width="90">Registro</th>
+                                    <th width="90">Status</th>
+                                    <th width="300">Detalhes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in logs.Take(quantidadeExibir))
+                                {
+                                    <tr width="630">
+                                        <td><small>@log.DataHora.ToString("dd/MM/yyyy HH:mm:ss")</small></td>
+                                        <td><small><strong>@log.Usuario.Replace("CORP\\", "")</strong></small></td>
+                                        <td>
+                                            <span class="badge @GetBadgeClassAcao(log.Acao)">
+                                                @log.Acao
+                                            </span>
+                                        </td>
+                                        
+                                        <td><small><strong>@log.RegistroIdentificador</strong></small></td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(log.StatusAnterior) && !string.IsNullOrEmpty(log.StatusNovo))
+                                            {
+                                                <small>
+                                                    <span class="badge bg-secondary">@log.StatusAnterior</span>
+                                                    <i class="bi bi-arrow-right"></i>
+                                                    <span class="badge bg-success">@log.StatusNovo</span>
+                                                </small>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(log.Detalhes))
+                                            {
+                                                <div class="mt-2">
+                                                    <div class="alert alert-secondary mt-1 mb-0">
+                                                        @log.Detalhes
+                                                    </div>
+                                                </div>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        @if (logs.Count > quantidadeExibir)
+                            {
+                                <div class="text-center my-3">
+                                    <button class="btn btn-outline-primary" @onclick="ExibirMais">
+                                        <i class="bi bi-plus-circle"></i> Exibir mais
+                                    </button>
+                                </div>
+                            }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+
+    private List<string> arquivosArquivados = new();
+private string? arquivoSelecionado = null;
+private bool? viewingArquivoArquivado = false;
+
+// chamar no OnInitializedAsync ou quando abrir a página
+protected override async Task OnInitializedAsync()
+{
+    await CarregarLogs();
+    await CarregarArquivosArquivados();
+    await CarregarLogs();
+}
+
+private async Task CarregarArquivosArquivados()
+{
+    try
+    {
+        arquivosArquivados = await LogService.ListarArquivosArquivadosAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao listar arquivos arquivados: {ex.Message}");
+        arquivosArquivados = new List<string>();
+    }
+}
+
+private async Task CarregarArquivoSelecionado()
+{
+    if (string.IsNullOrEmpty(arquivoSelecionado)) return;
+
+    isLoading = true;
+    try
+    {
+        var logsArquivo = await LogService.ObterLogsDoArquivoAsync(arquivoSelecionado);
+        logs = logsArquivo;
+        viewingArquivoArquivado = true;
+        quantidadeExibir = Math.Max(15, logs.Count);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao carregar arquivo arquivado: {ex.Message}");
+        await JS.InvokeVoidAsync("alert", $"Erro ao carregar arquivo: {ex.Message}");
+    }
+    finally
+    {
+        isLoading = false;
+    }
+}
+
+private async Task RecarregarLogsAtuais()
+{
+    viewingArquivoArquivado = false;
+    arquivoSelecionado = null;
+    await CarregarLogs();
+    await CarregarArquivosArquivados(); // atualiza lista (opcional)
+}
+
+
+
+    private int quantidadeExibir = 15;
+
+    private bool isLoading = true;
+    private List<LogModificacao> logs = new();
+    private LogModificacao? logSelecionado = null;
+
+    private DateTime? filtroDataInicio = DateTime.Today.AddDays(-7);
+    private DateTime? filtroDataFim = DateTime.Today.AddDays(1);
+    private string filtroAcao = "";
+    private string filtroTabela = "";
+
+
+    private async Task CarregarLogs()
+    {
+        isLoading = true;
+        try
+        {
+            // A assinatura que seu projeto usava: ObterLogsAsync(dataInicio, dataFim, acao, tabela)
+            logs = await LogService.ObterLogsAsync(
+                dataInicio: filtroDataInicio,
+                dataFim: filtroDataFim,
+                acao: string.IsNullOrEmpty(filtroAcao) ? null : filtroAcao,
+                tabela: string.IsNullOrEmpty(filtroTabela) ? null : filtroTabela
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar logs: {ex.Message}");
+            logs = new();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ExibirMais()
+    {
+        quantidadeExibir += 15;
+    }
+
+    private void SelecionarLog(LogModificacao log)
+    {
+        if (logSelecionado?.Id == log.Id)
+        {
+            logSelecionado = null;
+        }
+        else
+        {
+            logSelecionado = log;
+        }
+        StateHasChanged();
+    }
+
+    private string GetBadgeClassAcao(string acao)
+    {
+        return acao switch
+        {
+            "ALTERAR_STATUS" => "bg-warning text-dark",
+            "GERAR_JCL" => "bg-success",
+            "CRIAR" => "bg-primary",
+            "EDITAR" => "bg-info",
+            "EXCLUIR" => "bg-danger",
+            "APROVAR" => "bg-success",
+            "REJEITAR" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetNomeTabela(string tabela)
+    {
+        return tabela switch
+        {
+            "SolicitacaoCics2025" => "Solicitações",
+            "AmbienteCics" => "Amb. CICS",
+            "AmbienteTodos" => "Amb. TODOS",
+            _ => tabela
+        };
+    }
+
+    // ---------- NOVOS MÉTODOS PARA ARQUIVAR / LIMPAR ----------
+
+    private async Task ConfirmArquivarLogs()
+    {
+        // pergunta ao usuário — agora 7 dias
+        bool ok = await JS.InvokeAsync<bool>("confirm", "Deseja arquivar logs com mais de 7 dias e removê-los do banco?");
+        if (!ok) return;
+
+        await ArquivarLogs();
+    }
+
+    private async Task ArquivarLogs()
+    {
+        isLoading = true;
+        try
+        {
+            await CarregarLogs();
+            // chama o serviço que arquiva logs antigos (7 dias)
+            int arquivados = 0;
+
+            arquivados = await LogService.ArquivarLogsAntigosAsync(7);
+
+
+            await JS.InvokeVoidAsync("alert", $"{arquivados} registro(s) arquivados para a pasta 'antigos'.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao arquivar logs: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Erro ao arquivar logs: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+}
