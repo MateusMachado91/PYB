@@ -1,0 +1,60 @@
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.deps.json
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.dll
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.pdb
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.AssemblyReference.cache
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfoInputs.cache
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfo.cs
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CoreCompileInputs.cache
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CopyComplete
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\refint\PYBWeb.Application.dll
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\OneDrive - Banrisul S.A\Área de Trabalho\CICS_EFE-main\PYBWeb.Application\obj\Debug\net8.0\ref\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.deps.json
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.pdb
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.AssemblyReference.cache
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfoInputs.cache
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfo.cs
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CoreCompileInputs.cache
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CopyComplete
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\refint\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\Documents\PYB-CICS-Efetivacoes\PYBWeb.Application\obj\Debug\net8.0\ref\PYBWeb.Application.dll
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.deps.json
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.dll
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.pdb
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.AssemblyReference.cache
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfoInputs.cache
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfo.cs
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CoreCompileInputs.cache
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CopyComplete
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\refint\PYBWeb.Application.dll
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\Documents\Nova pasta\PYBWeb.Application\obj\Debug\net8.0\ref\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.deps.json
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.dll
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\bin\Debug\net8.0\PYBWeb.Domain.pdb
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.AssemblyReference.cache
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfoInputs.cache
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.AssemblyInfo.cs
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CoreCompileInputs.cache
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.csproj.CopyComplete
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\refint\PYBWeb.Application.dll
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\PYBWeb.Application.pdb
+C:\Users\E38235\Documents\PYB-Efetivacoes(DESENVOLVIMENTO)\PYBWeb.Application\obj\Debug\net8.0\ref\PYBWeb.Application.dll

@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "PYBWeb.Application/1.0.0": {
+        "dependencies": {
+          "PYBWeb.Domain": "1.0.0"
+        },
+        "runtime": {
+          "PYBWeb.Application.dll": {}
+        }
+      },
+      "PYBWeb.Domain/1.0.0": {
+        "runtime": {
+          "PYBWeb.Domain.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "PYBWeb.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PYBWeb.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
